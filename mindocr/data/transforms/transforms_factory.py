@@ -7,7 +7,6 @@ import numpy as np
 from .general_transforms import *
 from .det_transforms import *
 from .rec_transforms import *
-# TODO: merge transforms in modelzoo to det_transforms if verified to be correct
 from .modelzoo_transforms import *
 from .iaa_augment import *
 

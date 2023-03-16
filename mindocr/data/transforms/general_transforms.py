@@ -5,8 +5,33 @@ from PIL import Image
 
 from mindcv.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-__all__ = ['DecodeImage', 'NormalizeImage', 'ToCHWImage', 'PackLoaderInputs']
+__all__ = ['Compose', 'DecodeImage', 'NormalizeImage', 'ToCHWImage', 'PackLoaderInputs']
 
+
+class Compose():
+    '''
+    Compose transformation operations
+    '''
+    def __init__(self, transforms, input_columns: List[str]=None, output_column: List[str]=None):
+        self.transforms = transforms
+        self.input_columns = input_columns
+        self.output_columns = output_columns
+
+    def __call__(self, *data_tuple):
+        '''
+        '''
+        data = {name:data_tuple[i] for i, name in enumerate(input_columns)}
+
+        for t in self.transforms:
+            data = t(data)
+            if data is None:
+                return None
+
+        
+        return tuple(data[k] for k in self.output_columns)
+
+    def __len__(self):
+        return len(self.transforms)
 
 # TODO: use mindspore C.decode for efficiency
 class DecodeImage(object):
