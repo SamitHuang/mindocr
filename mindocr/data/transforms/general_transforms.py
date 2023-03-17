@@ -12,15 +12,19 @@ class Compose():
     '''
     Compose transformation operations
     '''
-    def __init__(self, transforms, input_columns: List[str]=None, output_column: List[str]=None):
+    def __init__(self, transforms, input_columns: List[str]=None, output_columns: List[str]=None):
         self.transforms = transforms
         self.input_columns = input_columns
         self.output_columns = output_columns
 
     def __call__(self, *data_tuple):
         '''
+        each element is a numpy array output by GeneratorDataset
         '''
-        data = {name:data_tuple[i] for i, name in enumerate(input_columns)}
+        data = {} 
+        for i, name in enumerate(self.input_columns):
+            data[name] = str(data_tuple[i])  if data_tuple[i].dtype.type == np.str_ else data_tuple[i] 
+        #data = {name: data_tuple[i] for i, name in enumerate(self.input_columns)}
 
         for t in self.transforms:
             data = t(data)

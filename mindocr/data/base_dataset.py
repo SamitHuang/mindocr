@@ -1,8 +1,6 @@
 from typing import Union, List, Tuple
-import random
 import os
 
-from .transforms.transforms_factory import create_transforms, run_transforms
 
 __all__ = ['BaseDataset']
 
@@ -29,6 +27,7 @@ class BaseDataset(object):
         for f in data_dir:
             if not os.path.exists(f):
                 raise ValueError(f"{f} not existed. Please check the yaml file for both train and eval")
+        self.data_dir = data_dir
 
         if label_file is not None:
             if isinstance(label_file, str):
@@ -36,6 +35,7 @@ class BaseDataset(object):
             for f in label_file:
                 if not os.path.exists(f):
                     raise ValueError(f"{f} not existed. Please check the yaml file for both train and eval")
+        self.label_file = label_file
 
 
     def __getitem__(self, index):

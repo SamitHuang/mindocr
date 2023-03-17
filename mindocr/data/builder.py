@@ -8,7 +8,6 @@ from .rec_lmdb_dataset import LMDBDataset
 from .transforms.transforms_factory import create_transforms
 from .transforms.general_transforms import Compose 
 
-
 supported_dataset_types = ['BaseDataset', 'DetDataset', 'RecDataset', 'LMDBDataset']
 
 def build_dataset(
@@ -80,7 +79,7 @@ def build_dataset(
     # generate source dataset (source w.r.t. the dataset.map pipeline) based on python callable numpy dataset in parallel 
     ds = ms.dataset.GeneratorDataset(
                     source=dataset,
-                    column_names=dataset_column_names,
+                    column_names=['img_path', 'annot'],
                     num_parallel_workers=2, #num_workers,
                     num_shards=num_shards,
                     shard_id=shard_id,
@@ -91,15 +90,18 @@ def build_dataset(
 
     # 2. create transformation
     # data mapping, processing and augmentation (high-performance transformation)
-    output_columns = dataset_config.output_keys
-    if dataset_config.transform_pipeline is not None:
-        transform_list = create_transforms(dataset_config.transform_pipeline)
+    output_columns = dataset_config['output_keys']
+    if dataset_config['transform_pipeline'] is not None:
+        transform_list = create_transforms(dataset_config['transform_pipeline'])
         # compose and map to required input/output tuple format 
-        operation = Compose(tranform_list, input_columns=dataset_column_names, output_columns=dataset_config.output_keys)  
-        
-        #ds = ds.map(operations=[operation],
-        #            python_multiprocessing=True, # keep True to improve performace for heavy computation.
-        #            num_parallel_workers=num_worker) 
+        operation = Compose(transform_list, input_columns=dataset_column_names, output_columns=output_columns)  
+        ds = ds.map(operations=[operation],
+                    input_columns=dataset_column_names,
+                    #output_columns=dataset.output_keys,
+                    python_multiprocessing=True, # keep True to improve performace for heavy computation.
+                    num_parallel_workers=num_workers,
+                    max_rowsize =max_rowsize,
+                    )
     else:
         opeartion = None
 
@@ -111,11 +113,11 @@ def build_dataset(
 
     dataloader = ds.batch(
                     loader_config['batch_size'],
-                    per_batch_map=operation,
                     drop_remainder=drop_remainder,
-                    num_parallel_workers=num_workers, # set depends on computation cost 
-                    python_multiprocessing=True, # set True for heavy computation
-                    max_rowsize =max_rowsize,
+                    num_parallel_workers=2, # set depends on computation cost 
+                    #per_batch_map=operation,
+                    #python_multiprocessing=True, # set True for heavy computation
+                    #max_rowsize =max_rowsize,
                     #input_columns=input_columns,
                     #output_columns=batch_column,
                     )
