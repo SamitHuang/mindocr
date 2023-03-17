@@ -24,14 +24,12 @@ class DetDataset(BaseDataset):
 	
 	    # load to self._data
         self.load_data_list(self.label_file, sample_ratio, shuffle)
+
+        self.output_columns = ['img_path', 'label']
     
     def __getitem__(self, index):
         img_path, annot = self._data[index]
         return img_path, annot
-
-
-    def get_column_names(self):
-        return ['img_path', 'label']
 
 
     def load_data_list(self, label_file: List[str], sample_ratio: List[float], shuffle: bool = False,

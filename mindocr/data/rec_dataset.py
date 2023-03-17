@@ -1,8 +1,9 @@
 from .base_dataset import BaseDataset
+from .det_dataset import DetDataset
 
 __all__ = ['RecDataset']
 
-class RecDataset(BaseDataset):
+class RecDataset(DetDataset):
     """Data iterator for recogition datasets including ICDAR15 dataset.
     The annotaiton format is required to aligned to paddle, which can be done using the `converter.py` script.
 

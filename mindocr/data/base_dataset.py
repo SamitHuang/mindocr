@@ -8,9 +8,13 @@ class BaseDataset(object):
     '''
     Source dataset to parse data (and label) file.
 
+    Attributes:
+        _data (List(Tuple)): source data items
+        output_columns (List(str)): names of elements in the output tuple of __getitem__
+
     Note: 
-        - Don't do heavy computation here such as image processing and augmentation. Leave it to mapping.
-        - Support multiple datasets
+        - The column name in `output_columns` must match the required key in image loading and label parsing operations (e.g., DecodeImage, DetLabelEncode)
+        - Do not put heavy computation here such as image processing and augmentation. Leave it to mapping.
     '''
     def __init__(self, 
                 data_dir: Union[str, List[str]], 
@@ -20,6 +24,7 @@ class BaseDataset(object):
 
         self._index = 0
         self._data = [] 
+        self.output_columns = ['img_path', 'label']
         
         # check
         if isinstance(data_dir, str):
@@ -43,11 +48,16 @@ class BaseDataset(object):
         raise NotImplementedError
 
 
+    def set_output_columns(self, column_names: List[str]):
+        self.output_columns = column_names
+
+
     def get_output_columns(self) -> List[str]:
         '''
         get the column names for the output tuple of __getitem__, required for data mapping in the next step 
         '''
-        raise NotImplementedError
+        #raise NotImplementedError
+        return self.output_columns
 
 
     def __next__(self):
