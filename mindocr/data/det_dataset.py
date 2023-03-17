@@ -31,7 +31,7 @@ class DetDataset(BaseDataset):
 
 
     def get_column_names(self):
-        return ['img_path', 'annot']
+        return ['img_path', 'label']
 
 
     def load_data_list(self, label_file: List[str], sample_ratio: List[float], shuffle: bool = False,

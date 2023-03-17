@@ -79,8 +79,8 @@ def build_dataset(
     # generate source dataset (source w.r.t. the dataset.map pipeline) based on python callable numpy dataset in parallel 
     ds = ms.dataset.GeneratorDataset(
                     source=dataset,
-                    column_names=['img_path', 'annot'],
-                    num_parallel_workers=2, #num_workers,
+                    column_names=dataset_column_names,
+                    num_parallel_workers=max(1, num_workers//2), #2
                     num_shards=num_shards,
                     shard_id=shard_id,
                     #python_multiprocessing=Flase,
@@ -97,7 +97,7 @@ def build_dataset(
         operation = Compose(transform_list, input_columns=dataset_column_names, output_columns=output_columns)  
         ds = ds.map(operations=[operation],
                     input_columns=dataset_column_names,
-                    #output_columns=dataset.output_keys,
+                    output_columns=output_columns,
                     python_multiprocessing=True, # keep True to improve performace for heavy computation.
                     num_parallel_workers=num_workers,
                     max_rowsize =max_rowsize,
@@ -114,7 +114,7 @@ def build_dataset(
     dataloader = ds.batch(
                     loader_config['batch_size'],
                     drop_remainder=drop_remainder,
-                    num_parallel_workers=2, # set depends on computation cost 
+                    num_parallel_workers=num_workers, # set depends on computation cost 
                     #per_batch_map=operation,
                     #python_multiprocessing=True, # set True for heavy computation
                     #max_rowsize =max_rowsize,
