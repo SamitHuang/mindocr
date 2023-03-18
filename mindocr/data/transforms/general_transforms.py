@@ -21,9 +21,9 @@ class Compose():
         '''
         each element is a numpy array output by GeneratorDataset
         '''
-        data = {} 
+        data = {}
         for i, name in enumerate(self.input_columns):
-            data[name] = str(data_tuple[i])  if data_tuple[i].dtype.type == np.str_ else data_tuple[i] 
+            data[name] = str(data_tuple[i])  if data_tuple[i].dtype.type in [np.str_, np.string_] else data_tuple[i]
         #data = {name: data_tuple[i] for i, name in enumerate(self.input_columns)}
 
         for t in self.transforms:
@@ -31,7 +31,7 @@ class Compose():
             if data is None:
                 return None
 
-        
+
         return tuple(data[k] for k in self.output_columns)
 
     def __len__(self):
@@ -52,10 +52,12 @@ class DecodeImage(object):
     def __call__(self, data):
         '''
         Required keys:
-            - img_path (or img_buffer): image path 
+            - img_path (or img_buffer): image path
             - img_buffer (or img_path): image buffer
         '''
         if 'img_path' in data:
+            if not isinstance(data['img_path'], str):
+                data['img_path'] = str(data['img_path'])
             with open(data['img_path'], 'rb') as f:
                 img = f.read() # bytes
                 #raw_image = np.fromfile(data['img_path'], np.uint8) # TODO: which the most efficient reading op.
