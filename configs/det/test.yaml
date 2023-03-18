@@ -1,6 +1,6 @@
 system:
-  mode: 1 # 0 for graph mode, 1 for pynative mode in MindSpore
-  distribute: False
+  mode: 0 # 0 for graph mode, 1 for pynative mode in MindSpore
+  distribute: True
   amp_level: 'O0'
   seed: 42
   val_while_train: True
@@ -46,8 +46,9 @@ scheduler:
   scheduler: polynomial_decay
   min_lr: 0.
   lr: 0.007
-  num_epochs: 1200
-  warmup_epochs: 3
+  num_epochs: 10 
+  warmup_epochs: 2
+  decay_epochs: 8
 
 optimizer:
   opt: SGD
@@ -109,10 +110,9 @@ train:
 
   loader:
     shuffle: True
-    batch_size: 2
+    batch_size: 16
     drop_remainder: True
-    max_rowsize: 32
-    num_workers: 1
+    num_workers: 8
 
 eval:
   dataset_sink_mode: False
@@ -149,5 +149,4 @@ eval:
     shuffle: False
     batch_size: 1 # TODO: due to dynamic shape of polygons (num of boxes varies), BS has to be 1
     drop_remainder: False 
-    max_rowsize: 20
     num_workers: 1

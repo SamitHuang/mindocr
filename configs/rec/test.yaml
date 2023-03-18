@@ -1,6 +1,6 @@
 system:
   mode: 0 # 0 for graph mode, 1 for pynative mode in MindSpore
-  distribute: False 
+  distribute: True 
   amp_level: 'O0'
   seed: 42
   val_while_train: True
@@ -12,7 +12,7 @@ common:
   max_text_len: &max_text_len 23
   infer_mode: &infer_mode False
   use_space_char: &use_space_char False
-  batch_size: &batch_size 16
+  batch_size: &batch_size 32
 
 model:
   type: rec
@@ -48,9 +48,9 @@ scheduler:
   scheduler: "cosine_decay"
   min_lr: 0.000001
   lr: 0.0001
-  num_epochs: 100
-  warmup_epochs: 10
-  decay_epochs: 90
+  num_epochs: 10
+  warmup_epochs: 2
+  decay_epochs: 8
 
 optimizer:
   opt: adamw
@@ -65,11 +65,10 @@ train:
   dataset_sink_mode: False
   dataset:
     type: RecDataset
-    #dataset_root: /data/ocr_datasets 
-    dataset_root: /Users/Samit/Data/datasets 
+    dataset_root: /Users/Samit/Data/datasets/
     data_dir: ic15/rec/train/ch4_training_word_images_gt
     label_file: ic15/rec/train/rec_gt.txt
-    sample_ratio: 0.4
+    sample_ratio: 0.1
     shuffle: True
     transform_pipeline:
       - DecodeImage: 
@@ -99,7 +98,6 @@ train:
       shuffle: True # TODO: tbc
       batch_size: *batch_size
       drop_remainder: True
-      max_rowsize: 16
       num_workers: 8
 
 eval:
@@ -107,10 +105,10 @@ eval:
   dataset_sink_mode: False
   dataset:
     type: RecDataset
-    dataset_root: /Users/Samit/Data/datasets 
+    dataset_root: /Users/Samit/Data/datasets/
     data_dir: ic15/rec/test/ch4_test_word_images_gt
     label_file: ic15/rec/test/rec_gt.txt
-    sample_ratio: 0.4
+    sample_ratio: 0.1
     shuffle: False 
     transform_pipeline:
       - DecodeImage: 
@@ -137,7 +135,6 @@ eval:
      
   loader:
       shuffle: False
-      batch_size: 8
+      batch_size: 16
       drop_remainder: False
-      max_rowsize: 12
-      num_workers: 2
+      num_workers: 1
