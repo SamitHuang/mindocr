@@ -24,7 +24,6 @@ class BaseDataset(object):
 
         self._index = 0
         self._data = [] 
-        self.output_columns = ['img_path', 'label']
         
         # check
         if isinstance(data_dir, str):
@@ -41,6 +40,10 @@ class BaseDataset(object):
                 if not os.path.exists(f):
                     raise ValueError(f"{f} not existed. Please check the yaml file for both train and eval")
         self.label_file = label_file
+
+        # must specify output column names
+        #self.output_columns = ['img_path', 'label']
+        self.output_columns = ['img_bytes', 'label']
 
 
     def __getitem__(self, index):
@@ -73,8 +76,8 @@ class BaseDataset(object):
         
         return len(self._data)
 
-
-    #def _load_image(self, img_path):
-    #    img = cv2.cvtColor(cv2.imread(img_path),
-    #                       cv2.COLOR_BGR2RGB).transpose((2, 0, 1))
-    #   return np.ascontiguousarray(img).astype(np.float32)
+    def _load_image_bytes(self, img_path):
+        '''load image bytes (prepared for decoding) '''
+        with open(img_path, 'rb') as f:
+            image_bytes = f.read()
+        return  image_bytes 

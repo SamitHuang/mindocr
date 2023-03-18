@@ -26,10 +26,13 @@ class DetDataset(BaseDataset):
         self.load_data_list(self.label_file, sample_ratio, shuffle)
 
         self.output_columns = ['img_path', 'label']
+        #self.output_columns = ['img_bytes', 'label']
     
     def __getitem__(self, index):
-        img_path, annot = self._data[index]
-        return img_path, annot
+        img_path, label= self._data[index]
+        return img_path, label
+        #img_bytes = self._load_image_bytes(img_path)
+        #return img_bytes, label
 
 
     def load_data_list(self, label_file: List[str], sample_ratio: List[float], shuffle: bool = False,
@@ -45,9 +48,9 @@ class DetDataset(BaseDataset):
         """
 
         # parse image file path and annotation and load into self._data
-        for idx, annot_file in enumerate(label_file):
+        for idx, label_fp in enumerate(label_file):
             img_dir = self.data_dir[idx]
-            with open(annot_file, "r", encoding='utf-8') as f:
+            with open(label_fp, "r", encoding='utf-8') as f:
                 lines = f.readlines()
                 if shuffle:
                     lines = random.sample(lines,
@@ -56,10 +59,10 @@ class DetDataset(BaseDataset):
                     lines = lines[:round(len(lines) * sample_ratio[idx])]
 
                 for line in lines:	
-                    img_name, annot = self._parse_annotation(line)
+                    img_name, annot_str = self._parse_annotation(line)
                     img_path = os.path.join(img_dir, img_name)
                     assert os.path.exists(img_path), "{} does not exist!".format(img_path)
-                    self._data.append((img_path, annot))
+                    self._data.append((img_path, annot_str))
 
 
     def _parse_annotation(self, data_line: str):
@@ -78,18 +81,33 @@ if __name__ == '__main__':
                )
     #print(next(detds))
     import mindspore as ms
+    import numpy as np
+    import cv2
+    import matplotlib.pyplot as plt
+
     ds = ms.dataset.GeneratorDataset(
                     source=detds,
-                    column_names=['img_path', 'annot']
+                    column_names=['img_bytes', 'label']
                     )
+    
     class SimpleDecoder():
         def __init__(self):
             pass
         def __call__(self, *data):
-            return data
+            raw_img = data[0]
+            label = data[1]
+            #print(data[0].dtype.type, data[1].dtype.type)
+            img = np.frombuffer(raw_img, dtype='uint8') # bytes of raw img file data
+            img = cv2.imdecode(img, cv2.IMREAD_COLOR) # decoded (or uncompressed) image data
+            return img, label
 
-    ds = ds.map(operations=[SimpleDecoder()], input_columns=['img_path', 'annot'])
-
-    a = next(ds.create_tuple_iterator())
-    print(a)
+    ds = ds.map(operations=[SimpleDecoder()], input_columns=['img_bytes', 'label'])
+    img, label = next(ds.create_tuple_iterator())
     #print(next(ds.create_tuple_iterator()))
+
+    img = img.asnumpy()
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    plt.figure()
+    plt.imshow(img)
+    plt.show()
+    

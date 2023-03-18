@@ -50,15 +50,21 @@ class DecodeImage(object):
         self.flag = cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR if ignore_orientation else cv2.IMREAD_COLOR
 
     def __call__(self, data):
-        #img = cv2.imread(data['img_path'], self.flag)
-        # read from buffer is faster?
+        '''
+        Required keys:
+            - img_path (or img_buffer): image path 
+            - img_buffer (or img_path): image buffer
+        '''
         if 'img_path' in data:
             with open(data['img_path'], 'rb') as f:
-                img = f.read()
-        elif 'img_lmdb' in data:
-            img = data["img_lmdb"]
-        img = np.frombuffer(img, dtype='uint8')
-        img = cv2.imdecode(img, self.flag)
+                img = f.read() # bytes
+                #raw_image = np.fromfile(data['img_path'], np.uint8) # TODO: which the most efficient reading op.
+        elif 'img_bytes' in data:
+            img = data["img_bytes"]
+        else:
+            raise ValueError('Missing required key in data, expecting `img_path` or `img_bytes` in `output_columns` of the picked source dataset')
+        img = np.frombuffer(img, dtype='uint8') # bytes of raw img file data
+        img = cv2.imdecode(img, self.flag) # decoded (or uncompressed) image data
 
         if self.img_mode == 'RGB':
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

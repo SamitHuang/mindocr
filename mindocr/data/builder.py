@@ -87,7 +87,7 @@ def build_dataset(
     ds = ms.dataset.GeneratorDataset(
                     source=dataset,
                     column_names=dataset_column_names,
-                    num_parallel_workers=max(1, num_workers//2), # lite computation
+                    num_parallel_workers=num_workers, #max(1, num_workers//2), # lite computation
                     num_shards=num_shards,
                     shard_id=shard_id,
                     #python_multiprocessing=Flase,
@@ -120,7 +120,7 @@ def build_dataset(
     if is_train and drop_remainder == False:
         print('WARNING: drop_remainder should be True for training, otherwise the last batch may lead to training fail.')
 
-    dataloader = ds.batch(
+    ds = ds.batch(
                     loader_config['batch_size'],
                     drop_remainder=drop_remainder,
                     num_parallel_workers=num_workers, # set depends on computation cost
@@ -131,8 +131,9 @@ def build_dataset(
                     #output_columns=batch_column,
                     )
 
+    #ds = ds.repeat(num_epochs)  # TODO: check need
     #steps_pre_epoch = dataset.get_dataset_size()
-    return dataloader
+    return ds
 
 
 def _validate_data_paths(dataset_config):
