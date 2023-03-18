@@ -21,7 +21,6 @@ def build_dataset(
         ):
     '''
     Build dataset
-
     Args:
         dataset_config (dict): dataset reading and processing configuartion containing keys:
             - type: dataset type, 'DetDataset', 'RecDataset'
@@ -29,17 +28,14 @@ def build_dataset(
             - data_dir (Union[str, List[str]]): directory to the data, which is a subfolder path related to `dataset_root`. For multiple datasets, it is a list of subfolder paths.
             - label_file (Union[str, List[str]]): file path to the annotation related to the `dataset_root`. For multiple datasets, it is a list of relative file paths.
             - transform_pipeline (list[dict]): each element corresponds to a transform operation on image and/or label
-
         loader_config (dict): dataloader configuration containing keys:
             - batch_size: batch size for data loader
             - drop_remainder: whether to drop the data in the last batch when the total of data can not be divided by the batch_size
         num_shards: num of devices for distributed mode
         shard_id: device id
         is_train: whether it is in training stage
-
     Return:
         data_loader (Dataset): dataloader to generate data batch
-
     Notes:
         - The main data process pipeline in MindSpore contains 3 parts: 1) load data files and generate source dataset, 2) perform per-data-row mapping such as image augmentation, 3) generate batch and apply batch mapping.
         - Each of the three steps supports multiprocess. Detailed machenism can be seen in https://www.mindspore.cn/docs/zh-CN/r2.0.0-alpha/api_python/mindspore.dataset.html
@@ -87,7 +83,7 @@ def build_dataset(
     ds = ms.dataset.GeneratorDataset(
                     source=dataset,
                     column_names=dataset_column_names,
-                    num_parallel_workers=num_workers, #max(1, num_workers//2), # lite computation
+                    num_parallel_workers=max(1, num_workers//2), # lite computation
                     num_shards=num_shards,
                     shard_id=shard_id,
                     #python_multiprocessing=Flase,
@@ -120,7 +116,7 @@ def build_dataset(
     if is_train and drop_remainder == False:
         print('WARNING: drop_remainder should be True for training, otherwise the last batch may lead to training fail.')
 
-    ds = ds.batch(
+    dataloader = ds.batch(
                     loader_config['batch_size'],
                     drop_remainder=drop_remainder,
                     num_parallel_workers=num_workers, # set depends on computation cost
@@ -131,9 +127,8 @@ def build_dataset(
                     #output_columns=batch_column,
                     )
 
-    #ds = ds.repeat(num_epochs)  # TODO: check need
     #steps_pre_epoch = dataset.get_dataset_size()
-    return ds
+    return dataloader
 
 
 def _validate_data_paths(dataset_config):
