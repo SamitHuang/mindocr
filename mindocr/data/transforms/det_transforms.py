@@ -11,6 +11,7 @@ import cv2
 import pyclipper
 from shapely.geometry import Polygon
 import numpy as np
+from .general_transforms import parse_string
 
 __all__ = ['DetLabelEncode', 'BorderMap', 'ShrinkBinaryMap', 'EastRandomCropData', 'PSERandomCrop', 'expand_poly']
 
@@ -51,7 +52,9 @@ class DetLabelEncode:
             texts (List(str)): text string
             ignore_tags (np.ndarray[bool]): indicators for ignorable texts (e.g., '###')
         """
+        data['label'] = parse_string(data['label'])
         label = data['label']
+
         label = json.loads(label)
         nBox = len(label)
         boxes, txts, txt_tags = [], [], []

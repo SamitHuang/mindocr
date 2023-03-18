@@ -22,9 +22,9 @@ class Compose():
         each element is a numpy array output by GeneratorDataset
         '''
         data = {}
-        for i, name in enumerate(self.input_columns):
-            data[name] = str(data_tuple[i])  if data_tuple[i].dtype.type in [np.str_, np.string_] else data_tuple[i]
-        #data = {name: data_tuple[i] for i, name in enumerate(self.input_columns)}
+        #for i, name in enumerate(self.input_columns):
+            #data[name] = str(data_tuple[i])  if data_tuple[i].dtype.type in [np.str_, np.string_] else data_tuple[i]
+        data = {name: data_tuple[i] for i, name in enumerate(self.input_columns)}
 
         for t in self.transforms:
             data = t(data)
@@ -36,6 +36,22 @@ class Compose():
 
     def __len__(self):
         return len(self.transforms)
+
+def parse_string(x):
+    ''' parse np.str_/np.bytes_/np.string_ to str '''
+    if isinstance(x, np.ndarray):
+        if x.dtype.type in [np.str_, np.string_]:
+            s = str(x)
+        elif x.dtype.type == np.bytes_:
+            s = bytes(x).decode()
+        else:
+            raise ValueError(f'Unsupported np type of img_path: {img_path.dtype.type}.')
+    elif isinstance(x, str):
+        s = x
+    else:
+        raise ValueError(f'Invalid string type: {type(x)}')
+
+    return s
 
 # TODO: use mindspore C.decode for efficiency
 class DecodeImage(object):
@@ -56,8 +72,7 @@ class DecodeImage(object):
             - img_buffer (or img_path): image buffer
         '''
         if 'img_path' in data:
-            if not isinstance(data['img_path'], str):
-                data['img_path'] = str(data['img_path'])
+            data['img_path'] = parse_string(data['img_path'])
             with open(data['img_path'], 'rb') as f:
                 img = f.read() # bytes
                 #raw_image = np.fromfile(data['img_path'], np.uint8) # TODO: which the most efficient reading op.
