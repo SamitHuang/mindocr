@@ -33,7 +33,7 @@ class DetDataset(BaseDataset):
         return img_path, label
         #img_bytes = self._load_image_bytes(img_path)
         #return img_bytes, label
-
+        
 
     def load_data_list(self, label_file: List[str], sample_ratio: List[float], shuffle: bool = False,
                        **kwargs) -> List[dict]:
