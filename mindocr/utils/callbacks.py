@@ -194,16 +194,18 @@ class EvalSaveCallback(Callback):
 
         print(
             f"Epoch: {cur_epoch}, "
-            f"loss:{train_loss:.5f}, time:{epoch_time:.3f}s"
+            f"loss:{train_loss:.5f}, training time:{epoch_time:.3f}s"
         )
 
         # evaluate only using device 0 if enabled
         if self.loader_eval is not None:
             sync_lock = os.path.join(self.sync_lock_dir, "run_eval_sync.lock" + str(cur_epoch)) # signal to lock other devices
             if self.is_main_device and not os.path.exists(sync_lock):
+                eval_start = time.time()
                 measures = self.net_evaluator.eval(self.loader_eval)
                 perf = measures[self.main_indicator]
                 print('Performance: ', measures)
+                print('Eval time: ', time.time()-eval_start)
 
                 try:
                     os.mknod(sync_lock) # for linux
