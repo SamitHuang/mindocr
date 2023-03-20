@@ -178,6 +178,7 @@ class EvalSaveCallback(Callback):
         """
         self._losses = []
         self.epoch_start_time = time.time()
+        self.last_epoch_end_time = time.time()
 
     def on_train_epoch_end(self, run_context):
         """
@@ -189,23 +190,23 @@ class EvalSaveCallback(Callback):
         cb_params = run_context.original_args()
         loss = cb_params.net_outputs
         cur_epoch = cb_params.cur_epoch_num
-        epoch_time = (time.time() - self.epoch_start_time)
+        epoch_train_time = (time.time() - self.epoch_start_time)
         train_loss = np.average(self._losses) # TODO: aggregate training loss for multiple cards
 
         print(
-            f"Epoch: {cur_epoch}, "
-            f"loss:{train_loss:.5f}, training time:{epoch_time:.3f}s"
+            f"Epoch: {cur_epoch}, Rank: {self.rank_id},"
+            f"loss:{train_loss:.5f}, training time:{epoch_train_time:.3f}s"
         )
 
+        eval_start = time.time()
         # evaluate only using device 0 if enabled
         if self.loader_eval is not None:
             sync_lock = os.path.join(self.sync_lock_dir, "run_eval_sync.lock" + str(cur_epoch)) # signal to lock other devices
             if self.is_main_device and not os.path.exists(sync_lock):
-                eval_start = time.time()
                 measures = self.net_evaluator.eval(self.loader_eval)
                 perf = measures[self.main_indicator]
                 print('Performance: ', measures)
-                print('Eval time: ', time.time()-eval_start)
+                #print('Eval time: ', time.time()-eval_start)
 
                 try:
                     os.mknod(sync_lock) # for linux
@@ -220,6 +221,14 @@ class EvalSaveCallback(Callback):
         else:
             perf = - train_loss
 
+        eval_time = time.time()-eval_start
+        tot_time = time.time()-self.last_epoch_end_time
+        print(
+            f"Epoch: {cur_epoch}, Rank: {self.rank_id},"
+            f"Training time:{epoch_train_time:.3f}s, Eval time:{eval_time:.3f}s, Tot time: {tot_time:.3f}s")
+
+        self.last_epoch_end_time = time.time()
+
         # save models and results using card 0
         if self.is_main_device:
             if perf > self.best_perf:
@@ -232,13 +241,15 @@ class EvalSaveCallback(Callback):
                 metric_names = ['loss']
                 if self.loader_eval is not None:
                     metric_names +=  list(measures.keys())
-                metric_names += ['epoch_time']
+                metric_names += ['train_time', 'eval_time', 'tot_time']
                 self.rec = PerfRecorder(self.ckpt_save_dir, metric_names=metric_names)
             epoch_metric_values = [cur_epoch, train_loss]
             if self.loader_eval is not None:
                 epoch_metric_values += list(measures.values())
-            epoch_metric_values += [epoch_time]
+            epoch_metric_values += [epoch_train_time, eval_time, tot_time]
             self.rec.add(*epoch_metric_values)
+
+
 
     def on_train_end(self, run_context):
         if self.is_main_device:
@@ -248,5 +259,3 @@ class EvalSaveCallback(Callback):
             # clear
             if os.path.exists(self.sync_lock_dir):
                 shutil.rmtree(self.sync_lock_dir)
-
-

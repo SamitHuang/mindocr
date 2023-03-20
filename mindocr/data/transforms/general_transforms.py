@@ -38,14 +38,18 @@ class Compose():
         return len(self.transforms)
 
 def parse_string(x):
-    ''' parse np.str_/np.bytes_/np.string_ to str '''
+    ''' parse np.str_/np.bytes_/np.string_/bytes to str '''
     if isinstance(x, np.ndarray):
-        if x.dtype.type in [np.str_, np.string_]:
-            s = str(x)
-        elif x.dtype.type == np.bytes_:
+        if x.dtype.type == np.bytes_:
             s = bytes(x).decode()
+        elif x.dtype.type==np.str_:
+            s = str(x)
+            if s[:2] == "b'":
+                s = s[2:-1]
         else:
             raise ValueError(f'Unsupported np type of img_path: {img_path.dtype.type}.')
+    elif isinstance(x, bytes):
+        s = x.decode()
     elif isinstance(x, str):
         s = x
     else:
@@ -72,6 +76,7 @@ class DecodeImage(object):
             - img_buffer (or img_path): image buffer
         '''
         if 'img_path' in data:
+            #print('----> S1: ', data['img_path'])
             data['img_path'] = parse_string(data['img_path'])
             with open(data['img_path'], 'rb') as f:
                 img = f.read() # bytes
@@ -173,3 +178,4 @@ class PackLoaderInputs:
             out.append(data[k])
 
         return tuple(out)
+

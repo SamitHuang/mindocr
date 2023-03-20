@@ -119,7 +119,7 @@ def build_dataset(
     dataloader = ds.batch(
                     loader_config['batch_size'],
                     drop_remainder=drop_remainder,
-                    num_parallel_workers=num_workers, # set depends on computation cost
+                    num_parallel_workers=min(2, num_workers), # set depends on computation cost
                     #per_batch_map=operation,
                     #python_multiprocessing=True, # set True for heavy computation
                     #max_rowsize =max_rowsize,

@@ -32,7 +32,7 @@ class DetDataset(BaseDataset):
     def __getitem__(self, index):
         img_path, label= self._data[index]
 
-        return img_path, label
+        return np.array(img_path, dtype=np.str_), np.array(label, dtype=np.str_)
         #img_bytes = self._load_image_bytes(img_path)
         #return img_bytes, label
 
@@ -63,6 +63,7 @@ class DetDataset(BaseDataset):
                 for line in lines:
                     img_name, annot_str = self._parse_annotation(line)
                     img_path = os.path.join(img_dir, img_name)
+                    #print('-------- S0:', img_path, type(img_path))
                     assert os.path.exists(img_path), "{} does not exist!".format(img_path)
                     self._data.append((img_path, annot_str))
 
@@ -112,4 +113,3 @@ if __name__ == '__main__':
     plt.figure()
     plt.imshow(img)
     plt.show()
-

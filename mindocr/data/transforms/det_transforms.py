@@ -52,7 +52,9 @@ class DetLabelEncode:
             texts (List(str)): text string
             ignore_tags (np.ndarray[bool]): indicators for ignorable texts (e.g., '###')
         """
+        #print('----- L1: ', data['label'], type(data['label']))
         data['label'] = parse_string(data['label'])
+        #print('----- L2: ', data['label'], type(data['label']))
         label = data['label']
 
         label = json.loads(label)

@@ -8,25 +8,25 @@ from .transforms.transforms_factory import create_transforms, run_transforms
 from .base_dataset import BaseDataset
 
 class LMDBDataset(BaseDataset):
-    """ 
+    """
     LMDB dataset.
 
     Args:
-        is_train: 
-        data_dir: 
+        is_train:
+        data_dir:
         shuffle, Optional, if not given, shuffle = is_train
         transform_pipeline: list of dict, key - transform class name, value - a dict of param config.
                     e.g., [{'DecodeImage': {'img_mode': 'BGR', 'channel_first': False}}]
             -       if None, default transform pipeline for text detection will be taken.
-        output_keys (list): required, indicates the keys in data dict that are expected to output for dataloader. if None, all data keys will be used for return. 
+        output_keys (list): required, indicates the keys in data dict that are expected to output for dataloader. if None, all data keys will be used for return.
         global_config: additional info, used in data transformation, possible keys:
             - character_dict_path
-            
+
     Returns:
-        data (tuple): Depending on the transform pipeline, __get_item__ returns a tuple for the specified data item. 
+        data (tuple): Depending on the transform pipeline, __get_item__ returns a tuple for the specified data item.
         You can specify the `output_keys` arg to order the output data for dataloader.
 
-    Notes: 
+    Notes:
         1. Dataset file structure should follow:
             data_dir
             ├── dataset01
@@ -35,14 +35,14 @@ class LMDBDataset(BaseDataset):
             ├── dataset02
                 ├── data.mdb
                 ├── lock.mdb
-            ├── ... 
+            ├── ...
     """
-    def __init__(self, 
-            is_train: bool = True, 
-            data_dir: Union[str, List[str]] = '', 
-            sample_ratios: Union[float, List[float]] = 1.0, 
+    def __init__(self,
+            is_train: bool = True,
+            data_dir: Union[str, List[str]] = '',
+            sample_ratios: Union[float, List[float]] = 1.0,
             shuffle: bool = None,
-            transform_pipeline: List[dict] = None, 
+            transform_pipeline: List[dict] = None,
             output_keys: List[str] = None,
             **kwargs,
             ):
@@ -54,7 +54,7 @@ class LMDBDataset(BaseDataset):
         sample_ratio = sample_ratios[0] if isinstance(sample_ratios, list) else sample_ratios # TODO: support sample_ratio for each data dir
         self.lmdb_sets = self.load_list_of_hierarchical_lmdb_dataset(data_dir)
         self._data = self.dataset_traversal(sample_ratio, shuffle)
-        
+
         self.output_columns = ['img_bytes', 'label']
 
     def load_list_of_hierarchical_lmdb_dataset(self, data_dir):
@@ -68,11 +68,11 @@ class LMDBDataset(BaseDataset):
                 results.update(lmdb_sets)
         else:
             results = {}
-            
+
         return results
 
     def load_hierarchical_lmdb_dataset(self, data_dir, start_idx=0):
-        
+
         lmdb_sets = {}
         dataset_idx = start_idx
         for dirpath, dirnames, filenames in os.walk(data_dir + '/'):
@@ -106,7 +106,7 @@ class LMDBDataset(BaseDataset):
                 = list(range(tmp_sample_num))
             data_idx_order_list[beg_idx:end_idx, 1] += 1
             beg_idx = beg_idx + tmp_sample_num
-            
+
         if shuffle:
             np.random.shuffle(data_idx_order_list)
 
@@ -133,8 +133,8 @@ class LMDBDataset(BaseDataset):
                                                 file_idx)
         #if sample_info is None:
         #    return self.__getitem__(np.random.randint(self.__len__())) #TODO: why random?
-        
-        return img_bytes, label        
+
+        return img_bytes, label
 
     def __len__(self):
         return self._data.shape[0]
