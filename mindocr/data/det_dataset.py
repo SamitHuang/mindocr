@@ -1,6 +1,7 @@
 import os
 from typing import Union, List, Tuple
 import random
+import numpy as np
 from .base_dataset import BaseDataset
 
 
@@ -10,7 +11,7 @@ __all__ = ['DetDataset']
 class DetDataset(BaseDataset):
     def __init__(self,
 	    is_train: bool = True,
-	    data_dir: Union[str, List[str]] = None, 
+	    data_dir: Union[str, List[str]] = None,
 	    label_file: Union[str, List[str]] = None,
 	    sample_ratio: Union[List, float] = 1.0,
 	    shuffle: bool = None,
@@ -21,19 +22,20 @@ class DetDataset(BaseDataset):
         if isinstance(sample_ratio, float):
             sample_ratio = [sample_ratio] * len(label_file)
         shuffle = shuffle if shuffle is not None else is_train
-	
+
 	    # load to self._data
         self.load_data_list(self.label_file, sample_ratio, shuffle)
 
         self.output_columns = ['img_path', 'label']
         #self.output_columns = ['img_bytes', 'label']
-    
+
     def __getitem__(self, index):
         img_path, label= self._data[index]
+
         return img_path, label
         #img_bytes = self._load_image_bytes(img_path)
         #return img_bytes, label
-        
+
 
     def load_data_list(self, label_file: List[str], sample_ratio: List[float], shuffle: bool = False,
                        **kwargs) -> List[dict]:
@@ -58,7 +60,7 @@ class DetDataset(BaseDataset):
                 else:
                     lines = lines[:round(len(lines) * sample_ratio[idx])]
 
-                for line in lines:	
+                for line in lines:
                     img_name, annot_str = self._parse_annotation(line)
                     img_path = os.path.join(img_dir, img_name)
                     assert os.path.exists(img_path), "{} does not exist!".format(img_path)
@@ -75,7 +77,7 @@ class DetDataset(BaseDataset):
         return img_name, annot_str
 
 if __name__ == '__main__':
-    detds = DetDataset(True, '/Users/Samit/Data/datasets/ic15/det/train/ch4_training_images', 
+    detds = DetDataset(True, '/Users/Samit/Data/datasets/ic15/det/train/ch4_training_images',
                 '/Users/Samit/Data/datasets/ic15/det/train/det_gt.txt',
                 shuffle=False
                )
@@ -89,7 +91,7 @@ if __name__ == '__main__':
                     source=detds,
                     column_names=['img_bytes', 'label']
                     )
-    
+
     class SimpleDecoder():
         def __init__(self):
             pass
@@ -110,4 +112,4 @@ if __name__ == '__main__':
     plt.figure()
     plt.imshow(img)
     plt.show()
-    
+
