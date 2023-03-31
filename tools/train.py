@@ -6,7 +6,7 @@ import os
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(__dir__, "..")))
 
-from tools.arg_parser import parse_args
+from tools.arg_parser import parse_args, merge_args_to_config
 args = parse_args()
 
 # modelarts
@@ -157,11 +157,15 @@ def main(cfg):
 
 
 if __name__ == '__main__':
+    # load yaml config
     yaml_fp = args.config
-    with open(yaml_fp) as fp:
+    with open(yaml_fp, 'r') as fp:
         config = yaml.safe_load(fp)
     config = Dict(config)
+    # merge args into yaml config
+    config = merge_args_to_config(args, config)
 
+    # modelart data sync 
     if args.enable_modelarts:
         import moxing as mox
         from tools.modelarts_adapter.modelarts import get_device_id, sync_data
@@ -180,7 +184,8 @@ if __name__ == '__main__':
 
     # main train and eval
     main(config)
-
+    
+    # modelart result upload
     if args.enable_modelarts:
         # upload models from local to server
         if get_device_id() == 0:
